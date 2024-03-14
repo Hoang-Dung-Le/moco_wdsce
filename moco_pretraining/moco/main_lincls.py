@@ -8,7 +8,7 @@ import shutil
 import time
 import warnings
 import math
-
+import torch.nn.functional as F
 import numpy as np
 import torch
 import torch.nn as nn
@@ -135,6 +135,17 @@ best_metrics = {'acc@1': {'func': 'topk_acc', 'format': ':6.2f', 'args': [1]}}
 best_metric_val = 0
 
 
+class WDSLayer(nn.Module):
+    def __init__(self):
+        super(WDSLayer, self).__init__()
+
+    def forward(self, x):
+        out_1 = F.softmax(x, dim=-1)
+        out_2 = torch.mul(x, out_1)
+        out_3 = F.softmax(out_2, dim=-2)
+        return out_3
+
+
 def main():
 
     args = parser.parse_args()
@@ -208,16 +219,17 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
             param.requires_grad = False
 
     num_classes = len(os.listdir(args.val_data)) #assume in imagenet format, so length == num folders/classes
+    print(num_classes)
     if num_classes == 2 and not args.binary:
         raise ValueError(f'Folder has {num_classes} classes, but you did not use "--binary" flag')
     elif num_classes != 2 and args.binary:
         raise ValueError(f'Folder has {num_classes} classes, but you used "--binary" flag')
 
     # init the fc layer
-    if args.binary:
-        model.fc = nn.Linear(model.fc.in_features, num_classes)
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
     model.fc.weight.data.normal_(mean=0.0, std=0.01)
     model.fc.bias.data.zero_()
+    model.fc = nn.Sequential(model.fc, WDSLayer())
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
