@@ -135,28 +135,28 @@ best_metrics = {'acc@1': {'func': 'topk_acc', 'format': ':6.2f', 'args': [1]}}
 best_metric_val = 0
 
 
-# class WDSLayer(nn.Module):
-#     def __init__(self):
-#         super(WDSLayer, self).__init__()
+class WDSLayer(nn.Module):
+    def __init__(self):
+        super(WDSLayer, self).__init__()
 
-#     def forward(self, x):
-#         out_1 = F.softmax(x, dim=-1)
-#         out_2 = torch.mul(x, out_1)
-#         out_3 = F.softmax(out_2, dim=-2)
-#         return out_3
+    def forward(self, x):
+        out_1 = F.softmax(x, dim=-1)
+        out_2 = torch.mul(x, out_1)
+        out_3 = F.softmax(out_2, dim=-2)
+        return out_3
     
-# class CustomModel(nn.Module):
-#     def __init__(self, backbone, fc_layer, wdslayer):
-#         super(CustomModel, self).__init__()
-#         self.backbone = backbone
-#         self.fc_layer = fc_layer
-#         self.wdslayer = wdslayer
+class CustomModel(nn.Module):
+    def __init__(self, backbone, fc_layer, wdslayer):
+        super(CustomModel, self).__init__()
+        self.backbone = backbone
+        self.fc_layer = fc_layer
+        self.wdslayer = wdslayer
 
-#     def forward(self, x):
-#         x = self.backbone(x)
-#         x = self.fc_layer(x)
-#         x = self.wdslayer(x)
-#         return x
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.fc_layer(x)
+        x = self.wdslayer(x)
+        return x
 
 
 def main():
@@ -240,10 +240,10 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
 
     # init the fc layer
     # model.fc = nn.Linear(model.fc.in_features, num_classes)
-    # fc_layer = nn.Linear(model.fc.in_features, num_classes)
+    fc_layer = nn.Linear(model.fc.in_features, num_classes)
     # model.fc.weight.data.normal_(mean=0.0, std=0.01)
     # model.fc.bias.data.zero_()
-    # model = CustomModel(model, fc_layer, WDSLayer())
+    model = CustomModel(model, fc_layer, WDSLayer())
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
