@@ -227,9 +227,12 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
 
     # init the fc layer
     model.fc = nn.Linear(model.fc.in_features, num_classes)
-    model.fc.weight.data.normal_(mean=0.0, std=0.01)
-    model.fc.bias.data.zero_()
-    model.fc = nn.Sequential(model.fc, WDSLayer())
+    # model.fc.weight.data.normal_(mean=0.0, std=0.01)
+    # model.fc.bias.data.zero_()
+    try:
+        model.fc = nn.Sequential(model.fc, WDSLayer())
+    except  Exception as e:
+        print(e)
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
