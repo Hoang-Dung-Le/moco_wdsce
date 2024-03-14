@@ -232,7 +232,7 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
             param.requires_grad = False
 
     num_classes = len(os.listdir(args.val_data)) #assume in imagenet format, so length == num folders/classes
-    print(num_classes)
+    # print(num_classes)
     if num_classes == 2 and not args.binary:
         raise ValueError(f'Folder has {num_classes} classes, but you did not use "--binary" flag')
     elif num_classes != 2 and args.binary:
