@@ -144,6 +144,19 @@ class WDSLayer(nn.Module):
         out_2 = torch.mul(x, out_1)
         out_3 = F.softmax(out_2, dim=-2)
         return out_3
+    
+class CustomModel(nn.Module):
+    def __init__(self, backbone, fc_layer, wdslayer):
+        super(CustomModel, self).__init__()
+        self.backbone = backbone
+        self.fc_layer = fc_layer
+        self.wdslayer = wdslayer
+
+    def forward(self, x):
+        x = self.backbone(x)
+        x = self.fc_layer(x)
+        x = self.wdslayer(x)
+        return x
 
 
 def main():
@@ -226,14 +239,11 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
         raise ValueError(f'Folder has {num_classes} classes, but you used "--binary" flag')
 
     # init the fc layer
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    # model.fc = nn.Linear(model.fc.in_features, num_classes)
+    fc_layer = nn.Linear(model.fc.in_features, num_classes)
     # model.fc.weight.data.normal_(mean=0.0, std=0.01)
     # model.fc.bias.data.zero_()
-    try:
-        model.fc = nn.Sequential(model.fc, WDSLayer())
-    except  Exception as e:
-        print(e)
-    print("ok")
+    model = CustomModel(model, fc_layer, WDSLayer())
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
