@@ -240,10 +240,16 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
 
     # init the fc layer
     # model.fc = nn.Linear(model.fc.in_features, num_classes)
-    fc_layer = nn.Linear(model.fc.in_features, num_classes)
+    # fc_layer = nn.Linear(model.fc.in_features, num_classes)
     # model.fc.weight.data.normal_(mean=0.0, std=0.01)
     # model.fc.bias.data.zero_()
-    model = CustomModel(model, fc_layer, WDSLayer())
+    # model = CustomModel(model, fc_layer, WDSLayer())
+
+
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+# Thêm WDSLayer vào sau model.fc
+    model.fc = nn.Sequential(model.fc, WDSLayer())
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
