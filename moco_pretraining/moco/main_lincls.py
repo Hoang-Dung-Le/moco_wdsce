@@ -233,6 +233,7 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
         model.fc = nn.Sequential(model.fc, WDSLayer())
     except  Exception as e:
         print(e)
+    print("ok")
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
