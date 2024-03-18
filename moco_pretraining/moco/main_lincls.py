@@ -128,6 +128,8 @@ parser.add_argument('--optimizer', dest='optimizer', default='adam',
 parser.add_argument('--aug-setting', default='chexpert',
                     choices=['moco_v1', 'moco_v2', 'chexpert'],
                     help='version of data augmentation to use')
+
+parser.add_argument('--type_loss', default='wdsce')
                     
 best_metrics = {'acc@1': {'func': 'topk_acc', 'format': ':6.2f', 'args': [1]}}
                 # 'acc@5': {'func': 'topk_acc', 'format': ':6.2f', 'args': [5]},
@@ -245,12 +247,16 @@ def main_worker(gpu, ngpus_per_node, args, checkpoint_folder):
     # model.fc.bias.data.zero_()
     # model = CustomModel(model, fc_layer, WDSLayer())
 
-
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    if args.type_loss == "wdsce":
+    
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
 
 # Thêm WDSLayer vào sau model.fc
-    model.fc = nn.Sequential(model.fc, WDSLayer())
-
+        model.fc = nn.Sequential(model.fc, WDSLayer())
+    else:
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+        model.fc.weight.data.normal_(mean=0.0, std=0.01)
+        model.fc.bias.data.zero_()
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
         if os.path.isfile(args.pretrained):
